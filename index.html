@@ -1,0 +1,1674 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Skill Elevate - Complete Prototype</title>
+    <!-- Tailwind CSS -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script>
+        tailwind.config = {
+            darkMode: 'class',
+            theme: {
+                extend: {
+                    colors: {
+                        primary: '#4F46E5',
+                        secondary: '#10B981',
+                        dark: '#1E293B',
+                    }
+                }
+            }
+        }
+    </script>
+    <!-- jQuery -->
+    <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
+    <!-- Font Awesome -->
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0-beta3/css/all.min.css" rel="stylesheet">
+    <!-- Chart.js -->
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <style>
+        /* Animation Classes */
+        .fade-in {
+            animation: fadeIn 0.3s ease-in forwards;
+        }
+        .slide-in {
+            animation: slideIn 0.4s ease-out forwards;
+        }
+        .slide-up {
+            animation: slideUp 0.3s ease-out forwards;
+        }
+        
+        @keyframes fadeIn {
+            from { opacity: 0; }
+            to { opacity: 1; }
+        }
+        
+        @keyframes slideIn {
+            from { transform: translateX(50px); opacity: 0; }
+            to { transform: translateX(0); opacity: 1; }
+        }
+        
+        @keyframes slideUp {
+            from { transform: translateY(20px); opacity: 0; }
+            to { transform: translateY(0); opacity: 1; }
+        }
+        
+        .loader {
+            border-top-color: #4F46E5;
+            animation: spinner 0.6s linear infinite;
+        }
+        
+        @keyframes spinner {
+            0% { transform: rotate(0deg); }
+            100% { transform: rotate(360deg); }
+        }
+        
+        /* Hide all pages by default */
+        .page {
+            display: none;
+        }
+        
+        /* Make active page visible */
+        .page.active {
+            display: block;
+        }
+
+        /* Pulse animation for recommendations */
+        @keyframes pulse-border {
+            0% { box-shadow: 0 0 0 0 rgba(79, 70, 229, 0.4); }
+            70% { box-shadow: 0 0 0 10px rgba(79, 70, 229, 0); }
+            100% { box-shadow: 0 0 0 0 rgba(79, 70, 229, 0); }
+        }
+        
+        .pulse-border {
+            animation: pulse-border 2s infinite;
+        }
+
+        /* Badge animation */
+        @keyframes bounce {
+            0%, 100% { transform: translateY(0); }
+            50% { transform: translateY(-5px); }
+        }
+        
+        .bounce {
+            animation: bounce 1s ease infinite;
+        }
+    </style>
+</head>
+<body class="bg-gray-50 text-gray-800 min-h-screen">
+    <!-- Header/Navigation (only visible when logged in) -->
+    <header id="main-header" class="bg-white shadow-md hidden">
+        <div class="container mx-auto px-4 py-4">
+            <div class="flex justify-between items-center">
+                <div class="flex items-center">
+                    <h1 class="text-2xl font-bold">
+                        <span class="text-primary">Skill</span>
+                        <span class="text-secondary">Elevate</span>
+                    </h1>
+                </div>
+                
+                <div class="hidden md:block">
+                    <nav class="flex space-x-6">
+                        <a href="#" class="nav-link text-gray-600 hover:text-primary transition-colors" data-page="dashboard">
+                            <i class="fas fa-tachometer-alt mr-2"></i>Dashboard
+                        </a>
+                        <a href="#" class="nav-link text-gray-600 hover:text-primary transition-colors" data-page="jobs">
+                            <i class="fas fa-briefcase mr-2"></i>Jobs
+                        </a>
+                        <a href="#" class="nav-link text-gray-600 hover:text-primary transition-colors" data-page="courses">
+                            <i class="fas fa-graduation-cap mr-2"></i>Courses
+                        </a>
+                        <a href="#" class="nav-link text-gray-600 hover:text-primary transition-colors" data-page="messages">
+                            <i class="fas fa-envelope mr-2"></i>Messages
+                            <span class="bg-primary text-white px-1.5 py-0.5 rounded-full text-xs ml-1">3</span>
+                        </a>
+                    </nav>
+                </div>
+                
+                <div class="flex items-center space-x-4">
+                    <button id="notifications-btn" class="text-gray-600 hover:text-primary relative">
+                        <i class="fas fa-bell text-xl"></i>
+                        <span class="absolute -top-1 -right-1 bg-red-500 text-white rounded-full w-4 h-4 flex items-center justify-center text-xs">2</span>
+                    </button>
+                    
+                    <div class="relative" id="user-menu-container">
+                        <button id="user-menu-btn" class="flex items-center space-x-2">
+                            <div class="w-9 h-9 rounded-full bg-gray-200 flex items-center justify-center overflow-hidden border-2 border-primary">
+                                <img src="https://www.jaswanthmadiya.tech/static/media/Madiya_Jaswanth.8af4881a2a9a2ff0f20f.png" alt="User" class="w-full h-full object-cover">
+                            </div>
+                            <span class="hidden md:inline-block font-medium" id="user-name">Jaswanth Madiya</span>
+                            <i class="fas fa-chevron-down text-xs text-gray-500"></i>
+                        </button>
+                        
+                        <div id="user-dropdown" class="absolute right-0 top-full mt-2 w-48 bg-white rounded-md shadow-lg py-1 z-20 hidden">
+                            <a href="#" class="block px-4 py-2 text-gray-700 hover:bg-gray-100 nav-link" data-page="profile">
+                                <i class="fas fa-user mr-2"></i>Profile
+                            </a>
+                            <a href="#" class="block px-4 py-2 text-gray-700 hover:bg-gray-100 nav-link" data-page="settings">
+                                <i class="fas fa-cog mr-2"></i>Settings
+                            </a>
+                            <div class="border-t border-gray-100 my-1"></div>
+                            <a href="#" id="logout-btn" class="block px-4 py-2 text-gray-700 hover:bg-gray-100">
+                                <i class="fas fa-sign-out-alt mr-2"></i>Logout
+                            </a>
+                        </div>
+                    </div>
+                    
+                    <button id="mobile-menu-btn" class="md:hidden">
+                        <i class="fas fa-bars text-xl"></i>
+                    </button>
+                </div>
+            </div>
+            
+            <!-- Mobile Navigation -->
+            <div id="mobile-nav" class="md:hidden mt-4 pb-2 hidden">
+                <nav class="flex flex-col space-y-3">
+                    <a href="#" class="nav-link py-2 text-gray-600 hover:text-primary transition-colors" data-page="dashboard">
+                        <i class="fas fa-tachometer-alt mr-2"></i>Dashboard
+                    </a>
+                    <a href="#" class="nav-link py-2 text-gray-600 hover:text-primary transition-colors" data-page="jobs">
+                        <i class="fas fa-briefcase mr-2"></i>Jobs
+                    </a>
+                    <a href="#" class="nav-link py-2 text-gray-600 hover:text-primary transition-colors" data-page="courses">
+                        <i class="fas fa-graduation-cap mr-2"></i>Courses
+                    </a>
+                    <a href="#" class="nav-link py-2 text-gray-600 hover:text-primary transition-colors" data-page="messages">
+                        <i class="fas fa-envelope mr-2"></i>Messages
+                        <span class="bg-primary text-white px-1.5 py-0.5 rounded-full text-xs ml-1">3</span>
+                    </a>
+                </nav>
+            </div>
+        </div>
+    </header>
+    
+    <!-- Notifications Sidebar -->
+    <div id="notifications-sidebar" class="fixed top-0 right-0 h-screen w-80 bg-white shadow-lg z-30 transform translate-x-full transition-transform duration-200">
+        <div class="p-4 border-b border-gray-200">
+            <div class="flex justify-between items-center">
+                <h2 class="text-lg font-semibold">Notifications</h2>
+                <button id="close-notifications" class="text-gray-500 hover:text-gray-700">
+                    <i class="fas fa-times"></i>
+                </button>
+            </div>
+        </div>
+        
+        <div class="p-4 overflow-y-auto h-full pb-24">
+            <div class="space-y-4">
+                <div class="bg-blue-50 p-3 rounded-lg border-l-4 border-primary">
+                    <div class="flex justify-between">
+                        <h4 class="font-medium text-gray-800">New Job Match</h4>
+                        <span class="text-xs text-gray-500">2 min ago</span>
+                    </div>
+                    <p class="text-sm text-gray-600 mt-1">A new job matching your skills has been posted: "Frontend Developer at TCS"</p>
+                </div>
+                
+                <div class="bg-blue-50 p-3 rounded-lg border-l-4 border-primary">
+                    <div class="flex justify-between">
+                        <h4 class="font-medium text-gray-800">Course Recommendation</h4>
+                        <span class="text-xs text-gray-500">1 hour ago</span>
+                    </div>
+                    <p class="text-sm text-gray-600 mt-1">Based on your interests, we recommend "Advanced React Patterns"</p>
+                </div>
+                
+                <div class="p-3 rounded-lg border border-gray-200">
+                    <div class="flex justify-between">
+                        <h4 class="font-medium text-gray-800">Profile View</h4>
+                        <span class="text-xs text-gray-500">Yesterday</span>
+                    </div>
+                    <p class="text-sm text-gray-600 mt-1">Your profile was viewed by a recruiter from Infosys</p>
+                </div>
+                
+                <div class="p-3 rounded-lg border border-gray-200">
+                    <div class="flex justify-between">
+                        <h4 class="font-medium text-gray-800">Application Update</h4>
+                        <span class="text-xs text-gray-500">2 days ago</span>
+                    </div>
+                    <p class="text-sm text-gray-600 mt-1">Your application for "Senior UX Designer" has moved to the interview stage</p>
+                </div>
+            </div>
+        </div>
+    </div>
+    
+    <!-- Overlay for mobile menu -->
+    <div id="overlay" class="fixed inset-0 bg-black bg-opacity-50 z-20 hidden"></div>
+    
+    <!-- Login/Register Page -->
+    <div id="login-page" class="page active min-h-screen flex items-center justify-center py-12 px-4 sm:px-6 lg:px-8 bg-gradient-to-br from-indigo-50 to-blue-50">
+        <div class="max-w-md w-full space-y-8 ml-auto mr-auto bg-white p-8 rounded-xl shadow-lg">
+            <div class="text-center">
+                <h1 class="text-3xl font-bold mb-1">
+                    <span class="text-primary">Skill</span><span class="text-secondary">Elevate</span>
+                </h1>
+                <h2 class="text-lg text-gray-600 mb-6" id="auth-title">Sign in to your account</h2>
+            </div>
+            
+            <!-- Auth Tabs -->
+            <div class="flex border-b border-gray-200 mb-6">
+                <button id="login-tab" class="flex-1 py-2 text-center font-medium border-b-2 border-primary text-primary">Login</button>
+                <button id="register-tab" class="flex-1 py-2 text-center font-medium text-gray-500 hover:text-gray-700">Register</button>
+            </div>
+            
+            <!-- Login Form -->
+            <form id="login-form" class="space-y-6">
+                <div>
+                    <label for="login-email" class="block text-sm font-medium text-gray-700 mb-1">Email address</label>
+                    <div class="relative">
+                        <div class="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
+                            <i class="fas fa-envelope text-gray-400"></i>
+                        </div>
+                        <input id="login-email" name="email" type="email" autocomplete="email" required class="appearance-none block w-full pl-10 pr-3 py-2 border border-gray-300 rounded-md shadow-sm placeholder-gray-400 focus:outline-none focus:ring-primary focus:border-primary" placeholder="Enter your email">
+                    </div>
+                </div>
+                
+                <div>
+                    <label for="login-password" class="block text-sm font-medium text-gray-700 mb-1">Password</label>
+                    <div class="relative">
+                        <div class="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
+                            <i class="fas fa-lock text-gray-400"></i>
+                        </div>
+                        <input id="login-password" name="password" type="password" autocomplete="current-password" required class="appearance-none block w-full pl-10 pr-3 py-2 border border-gray-300 rounded-md shadow-sm placeholder-gray-400 focus:outline-none focus:ring-primary focus:border-primary" placeholder="Enter your password">
+                    </div>
+                </div>
+                
+                <div class="flex items-center justify-between">
+                    <div class="flex items-center">
+                        <input id="remember-me" name="remember-me" type="checkbox" class="h-4 w-4 text-primary focus:ring-primary border-gray-300 rounded">
+                        <label for="remember-me" class="ml-2 block text-sm text-gray-700">Remember me</label>
+                    </div>
+                    
+                    <div>
+                        <a href="#" class="text-sm text-primary hover:underline">Forgot password?</a>
+                    </div>
+                </div>
+                
+                <div>
+                    <button id="login-submit" type="submit" class="w-full flex justify-center py-2 px-4 border border-transparent rounded-md shadow-sm text-sm font-medium text-white bg-primary hover:bg-primary/90 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-primary">
+                        Sign in
+                    </button>
+                </div>
+                
+                <div class="relative">
+                    <div class="absolute inset-0 flex items-center">
+                        <div class="w-full border-t border-gray-300"></div>
+                    </div>
+                    <div class="relative flex justify-center text-sm">
+                        <span class="px-2 bg-white text-gray-500">Or continue with</span>
+                    </div>
+                </div>
+                
+                <div class="grid grid-cols-3 gap-3">
+                    <button type="button" class="w-full inline-flex justify-center py-2 px-4 border border-gray-300 rounded-md shadow-sm bg-white text-sm font-medium text-gray-500 hover:bg-gray-50">
+                        <i class="fab fa-google"></i>
+                    </button>
+                    <button type="button" class="w-full inline-flex justify-center py-2 px-4 border border-gray-300 rounded-md shadow-sm bg-white text-sm font-medium text-gray-500 hover:bg-gray-50">
+                        <i class="fab fa-linkedin-in"></i>
+                    </button>
+                    <button type="button" class="w-full inline-flex justify-center py-2 px-4 border border-gray-300 rounded-md shadow-sm bg-white text-sm font-medium text-gray-500 hover:bg-gray-50">
+                        <i class="fab fa-github"></i>
+                    </button>
+                </div>
+            </form>
+            
+            <!-- Register Form (hidden by default) -->
+            <form id="register-form" class="space-y-6 hidden">
+                <div class="grid grid-cols-2 gap-3">
+                    <div>
+                        <label for="register-first-name" class="block text-sm font-medium text-gray-700 mb-1">First name</label>
+                        <input id="register-first-name" name="first-name" type="text" required class="appearance-none block w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm placeholder-gray-400 focus:outline-none focus:ring-primary focus:border-primary" placeholder="First name">
+                    </div>
+                    
+                    <div>
+                        <label for="register-last-name" class="block text-sm font-medium text-gray-700 mb-1">Last name</label>
+                        <input id="register-last-name" name="last-name" type="text" required class="appearance-none block w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm placeholder-gray-400 focus:outline-none focus:ring-primary focus:border-primary" placeholder="Last name">
+                    </div>
+                </div>
+                
+                <div>
+                    <label for="register-email" class="block text-sm font-medium text-gray-700 mb-1">Email address</label>
+                    <div class="relative">
+                        <div class="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
+                            <i class="fas fa-envelope text-gray-400"></i>
+                        </div>
+                        <input id="register-email" name="email" type="email" autocomplete="email" required class="appearance-none block w-full pl-10 pr-3 py-2 border border-gray-300 rounded-md shadow-sm placeholder-gray-400 focus:outline-none focus:ring-primary focus:border-primary" placeholder="Enter your email">
+                    </div>
+                </div>
+                
+                <div>
+                    <label for="register-password" class="block text-sm font-medium text-gray-700 mb-1">Password</label>
+                    <div class="relative">
+                        <div class="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
+                            <i class="fas fa-lock text-gray-400"></i>
+                        </div>
+                        <input id="register-password" name="password" type="password" required class="appearance-none block w-full pl-10 pr-3 py-2 border border-gray-300 rounded-md shadow-sm placeholder-gray-400 focus:outline-none focus:ring-primary focus:border-primary" placeholder="Create a password">
+                    </div>
+                </div>
+                
+                <div>
+                    <label for="register-password-confirm" class="block text-sm font-medium text-gray-700 mb-1">Confirm password</label>
+                    <div class="relative">
+                        <div class="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
+                            <i class="fas fa-lock text-gray-400"></i>
+                        </div>
+                        <input id="register-password-confirm" name="password-confirm" type="password" required class="appearance-none block w-full pl-10 pr-3 py-2 border border-gray-300 rounded-md shadow-sm placeholder-gray-400 focus:outline-none focus:ring-primary focus:border-primary" placeholder="Confirm your password">
+                    </div>
+                </div>
+                
+                <div class="flex items-center">
+                    <input id="terms" name="terms" type="checkbox" required class="h-4 w-4 text-primary focus:ring-primary border-gray-300 rounded">
+                    <label for="terms" class="ml-2 block text-sm text-gray-700">
+                        I agree to the <a href="#" class="text-primary hover:underline">Terms of Service</a> and <a href="#" class="text-primary hover:underline">Privacy Policy</a>
+                    </label>
+                </div>
+                
+                <div>
+                    <button id="register-submit" type="submit" class="w-full flex justify-center py-2 px-4 border border-transparent rounded-md shadow-sm text-sm font-medium text-white bg-primary hover:bg-primary/90 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-primary">
+                        Create Account
+                    </button>
+                </div>
+            </form>
+        </div>
+    </div>
+    
+    <!-- Dashboard Page -->
+    <div id="dashboard-page" class="page pt-8 pb-16 px-4 fade-in">
+        <div class="container mx-auto">
+            <!-- Welcome Banner -->
+            <div class="bg-gradient-to-r from-primary to-indigo-600 rounded-xl p-6 text-white mb-8 shadow-lg">
+                <div class="flex flex-col md:flex-row justify-between items-start md:items-center">
+                    <div>
+                        <h1 class="text-2xl md:text-3xl font-bold mb-2">Welcome back, <span id="dashboard-user-name">Jaswanth</span>!</h1>
+                        <p class="text-indigo-100">Your job search journey continues. Here's your progress so far.</p>
+                    </div>
+                    <div class="mt-4 md:mt-0">
+                        <button class="bg-white text-primary py-2 px-4 rounded-lg font-medium hover:bg-gray-100 transition-colors shadow-sm nav-link text-black" data-page="jobs">
+                            <i class="fas fa-briefcase mr-2"></i>Browse Jobs
+                        </button>
+                    </div>
+                </div>
+            </div>
+            
+            <!-- Stats Cards -->
+            <div class="grid grid-cols-1 md:grid-cols-4 gap-6 mb-8">
+                <div class="bg-white rounded-lg shadow p-6 slide-up" style="animation-delay: 0.1s">
+                    <div class="flex justify-between items-start">
+                        <div>
+                            <p class="text-sm text-gray-500 font-medium">Applications</p>
+                            <h3 class="text-3xl font-bold mt-1">12</h3>
+                        </div>
+                        <div class="bg-blue-100 p-3 rounded-full text-primary">
+                            <i class="fas fa-paper-plane"></i>
+                        </div>
+                    </div>
+                    <div class="flex items-center mt-4">
+                        <span class="text-green-500 flex items-center text-sm font-medium">
+                            <i class="fas fa-arrow-up mr-1"></i> 8%
+                        </span>
+                        <span class="text-gray-500 text-sm ml-2">from last month</span>
+                    </div>
+                </div>
+                
+                <div class="bg-white rounded-lg shadow p-6 slide-up" style="animation-delay: 0.2s">
+                    <div class="flex justify-between items-start">
+                        <div>
+                            <p class="text-sm text-gray-500 font-medium">Interviews</p>
+                            <h3 class="text-3xl font-bold mt-1">4</h3>
+                        </div>
+                        <div class="bg-purple-100 p-3 rounded-full text-purple-600">
+                            <i class="fas fa-users"></i>
+                        </div>
+                    </div>
+                    <div class="flex items-center mt-4">
+                        <span class="text-green-500 flex items-center text-sm font-medium">
+                            <i class="fas fa-arrow-up mr-1"></i> 12%
+                        </span>
+                        <span class="text-gray-500 text-sm ml-2">from last month</span>
+                    </div>
+                </div>
+                
+                <div class="bg-white rounded-lg shadow p-6 slide-up" style="animation-delay: 0.3s">
+                    <div class="flex justify-between items-start">
+                        <div>
+                            <p class="text-sm text-gray-500 font-medium">Profile Views</p>
+                            <h3 class="text-3xl font-bold mt-1">86</h3>
+                        </div>
+                        <div class="bg-green-100 p-3 rounded-full text-green-600">
+                            <i class="fas fa-eye"></i>
+                        </div>
+                    </div>
+                    <div class="flex items-center mt-4">
+                        <span class="text-green-500 flex items-center text-sm font-medium">
+                            <i class="fas fa-arrow-up mr-1"></i> 32%
+                        </span>
+                        <span class="text-gray-500 text-sm ml-2">from last month</span>
+                    </div>
+                </div>
+                
+                <div class="bg-white rounded-lg shadow p-6 slide-up" style="animation-delay: 0.4s">
+                    <div class="flex justify-between items-start">
+                        <div>
+                            <p class="text-sm text-gray-500 font-medium">Profile Completion</p>
+                            <h3 class="text-3xl font-bold mt-1">75%</h3>
+                        </div>
+                        <div class="bg-yellow-100 p-3 rounded-full text-yellow-600">
+                            <i class="fas fa-star"></i>
+                        </div>
+                    </div>
+                    <div class="flex items-center mt-4">
+                        <div class="w-full bg-gray-200 rounded-full h-2.5">
+                            <div class="bg-primary h-2.5 rounded-full" style="width: 75%"></div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            
+            <!-- Main Dashboard Content -->
+            <div class="grid grid-cols-1 lg:grid-cols-3 gap-6">
+                <!-- Left Column -->
+                <div class="lg:col-span-2 space-y-6">
+                    <!-- Application Activity Chart -->
+                    <div class="bg-white rounded-lg shadow p-6">
+                        <div class="flex justify-between items-center mb-4">
+                            <h2 class="text-lg font-bold">Application Activity</h2>
+                            <select class="bg-gray-50 border border-gray-300 text-gray-700 rounded-md text-sm px-3 py-1">
+                                <option>Last 7 days</option>
+                                <option>Last 30 days</option>
+                                <option>Last 90 days</option>
+                            </select>
+                        </div>
+                        <div>
+                            <canvas id="activityChart" height="250"></canvas>
+                        </div>
+                    </div>
+                    
+                    <!-- Recent Applications -->
+                    <div class="bg-white rounded-lg shadow p-6">
+                        <div class="flex justify-between items-center mb-4">
+                            <h2 class="text-lg font-bold">Recent Applications</h2>
+                            <a href="#" class="text-primary text-sm hover:underline">View all</a>
+                        </div>
+                        <div class="space-y-4">
+                            <div class="border-l-4 border-green-500 pl-4 py-2">
+                                <div class="flex justify-between">
+                                    <div>
+                                        <h3 class="font-medium">Frontend Developer</h3>
+                                        <p class="text-sm text-gray-500">TCS, Hyderabad</p>
+                                    </div>
+                                    <div class="text-right">
+                                        <span class="inline-block bg-green-100 text-green-800 text-xs px-2 py-1 rounded-full">Interview</span>
+                                        <p class="text-xs text-gray-500 mt-1">Applied 2 days ago</p>
+                                    </div>
+                                </div>
+                            </div>
+                            
+                            <div class="border-l-4 border-yellow-500 pl-4 py-2">
+                                <div class="flex justify-between">
+                                    <div>
+                                        <h3 class="font-medium">UX/UI Designer</h3>
+                                        <p class="text-sm text-gray-500">Wipro, Bangalore</p>
+                                    </div>
+                                    <div class="text-right">
+                                        <span class="inline-block bg-yellow-100 text-yellow-800 text-xs px-2 py-1 rounded-full">In Review</span>
+                                        <p class="text-xs text-gray-500 mt-1">Applied 5 days ago</p>
+                                    </div>
+                                </div>
+                            </div>
+                            
+                            <div class="border-l-4 border-blue-500 pl-4 py-2">
+                                <div class="flex justify-between">
+                                    <div>
+                                        <h3 class="font-medium">React Native Developer</h3>
+                                        <p class="text-sm text-gray-500">Infosys, Chennai</p>
+                                    </div>
+                                    <div class="text-right">
+                                        <span class="inline-block bg-blue-100 text-blue-800 text-xs px-2 py-1 rounded-full">Applied</span>
+                                        <p class="text-xs text-gray-500 mt-1">Applied 1 week ago</p>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                
+                <!-- Right Column -->
+                <div class="space-y-6">
+                    <!-- Recommended Jobs -->
+                    <div class="bg-white rounded-lg shadow p-6 pulse-border">
+                        <div class="flex justify-between items-center mb-4">
+                            <h2 class="text-lg font-bold">Recommended For You</h2>
+                            <span class="bg-red-500 text-white text-xs px-2 py-1 rounded-full bounce">New</span>
+                        </div>
+                        <div class="space-y-4">
+                            <div class="border border-gray-200 rounded-lg p-4 hover:shadow-md transition-shadow bg-gradient-to-r from-blue-50 to-white">
+                                <div class="flex justify-between">
+                                    <h3 class="font-medium text-primary">Senior Frontend Engineer</h3>
+                                    <span class="bg-green-100 text-green-800 text-xs px-2 py-1 rounded-full">95% Match</span>
+                                </div>
+                                <p class="text-sm text-gray-500">Google - Bangalore</p>
+                                <div class="flex mt-2 mb-3">
+                                    <span class="bg-gray-100 text-gray-800 text-xs px-2 py-1 rounded-full mr-2">React</span>
+                                    <span class="bg-gray-100 text-gray-800 text-xs px-2 py-1 rounded-full mr-2">TypeScript</span>
+                                    <span class="bg-gray-100 text-gray-800 text-xs px-2 py-1 rounded-full">Redux</span>
+                                </div>
+                                <div class="flex justify-between items-center">
+                                    <span class="text-green-600 font-medium">₹18L - ₹25L</span>
+                                    <button class="text-primary hover:text-primary/80">
+                                        <i class="far fa-bookmark"></i>
+                                    </button>
+                                </div>
+                            </div>
+                            
+                            <div class="border border-gray-200 rounded-lg p-4 hover:shadow-md transition-shadow">
+                                <div class="flex justify-between">
+                                    <h3 class="font-medium">Full Stack Developer</h3>
+                                    <span class="bg-green-100 text-green-800 text-xs px-2 py-1 rounded-full">88% Match</span>
+                                </div>
+                                <p class="text-sm text-gray-500">Razorpay - Remote</p>
+                                <div class="flex mt-2 mb-3">
+                                    <span class="bg-gray-100 text-gray-800 text-xs px-2 py-1 rounded-full mr-2">Node.js</span>
+                                    <span class="bg-gray-100 text-gray-800 text-xs px-2 py-1 rounded-full mr-2">React</span>
+                                    <span class="bg-gray-100 text-gray-800 text-xs px-2 py-1 rounded-full">MongoDB</span>
+                                </div>
+                                <div class="flex justify-between items-center">
+                                    <span class="text-green-600 font-medium">₹14L - ₹22L</span>
+                                    <button class="text-primary hover:text-primary/80">
+                                        <i class="far fa-bookmark"></i>
+                                    </button>
+                                </div>
+                            </div>
+                            
+                            <a href="#" class="block text-center text-primary hover:underline py-2 nav-link" data-page="jobs">Show more jobs</a>
+                        </div>
+                    </div>
+                    
+                    <!-- Upcoming Interviews -->
+                    <div class="bg-white rounded-lg shadow p-6">
+                        <h2 class="text-lg font-bold mb-4">Upcoming Interviews</h2>
+                        <div class="space-y-4">
+                            <div class="flex items-start">
+                                <div class="bg-primary/10 rounded-full p-3 text-primary mr-3">
+                                    <i class="fas fa-video"></i>
+                                </div>
+                                <div>
+                                    <h3 class="font-medium">Technical Interview</h3>
+                                    <p class="text-sm text-gray-500">TCS, Hyderabad</p>
+                                    <p class="text-xs mt-1 text-gray-500">Tomorrow at 10:00 AM</p>
+                                </div>
+                            </div>
+                            
+                            <div class="flex items-start">
+                                <div class="bg-purple-100 rounded-full p-3 text-purple-600 mr-3">
+                                    <i class="fas fa-phone-alt"></i>
+                                </div>
+                                <div>
+                                    <h3 class="font-medium">HR Screening</h3>
+                                    <p class="text-sm text-gray-500">Wipro, Bangalore</p>
+                                    <p class="text-xs mt-1 text-gray-500">Friday at 2:00 PM</p>
+                                </div>
+                            </div>
+                            
+                            <a href="#" class="block text-center text-primary hover:underline py-2">Manage interviews</a>
+                        </div>
+                    </div>
+                    
+                    <!-- Skills Progress -->
+                    <div class="bg-white rounded-lg shadow p-6">
+                        <h2 class="text-lg font-bold mb-4">Skills Progress</h2>
+                        <div class="space-y-4">
+                            <div>
+                                <div class="flex justify-between mb-1">
+                                    <span class="text-sm font-medium">React</span>
+                                    <span class="text-sm text-gray-500">85%</span>
+                                </div>
+                                <div class="w-full bg-gray-200 rounded-full h-2">
+                                    <div class="bg-blue-600 h-2 rounded-full" style="width: 85%"></div>
+                                </div>
+                            </div>
+                            
+                            <div>
+                                <div class="flex justify-between mb-1">
+                                    <span class="text-sm font-medium">JavaScript</span>
+                                    <span class="text-sm text-gray-500">90%</span>
+                                </div>
+                                <div class="w-full bg-gray-200 rounded-full h-2">
+                                    <div class="bg-blue-600 h-2 rounded-full" style="width: 90%"></div>
+                                </div>
+                            </div>
+                            
+                            <div>
+                                <div class="flex justify-between mb-1">
+                                    <span class="text-sm font-medium">Node.js</span>
+                                    <span class="text-sm text-gray-500">70%</span>
+                                </div>
+                                <div class="w-full bg-gray-200 rounded-full h-2">
+                                    <div class="bg-blue-600 h-2 rounded-full" style="width: 70%"></div>
+                                </div>
+                            </div>
+                            
+                            <div>
+                                <div class="flex justify-between mb-1">
+                                    <span class="text-sm font-medium">UI/UX Design</span>
+                                    <span class="text-sm text-gray-500">65%</span>
+                                </div>
+                                <div class="w-full bg-gray-200 rounded-full h-2">
+                                    <div class="bg-blue-600 h-2 rounded-full" style="width: 65%"></div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+    
+    <!-- Jobs Page -->
+    <div id="jobs-page" class="page pt-8 pb-16 px-4 fade-in">
+        <div class="container mx-auto">
+            <div class="flex flex-col md:flex-row justify-between items-start md:items-center mb-8">
+                <div>
+                    <h1 class="text-2xl md:text-3xl font-bold">Find Your Next Opportunity</h1>
+                    <p class="text-gray-600">Browse through thousands of jobs matching your skills</p>
+                </div>
+                <div class="mt-4 md:mt-0">
+                    <button class="bg-primary text-white py-2 px-4 rounded-lg font-medium hover:bg-primary/90 transition-colors shadow-sm">
+                        <i class="fas fa-bell mr-2"></i>Create Job Alert
+                    </button>
+                </div>
+            </div>
+            
+            <!-- Search and Filters -->
+            <div class="bg-white rounded-lg shadow p-4 mb-6">
+                <div class="flex flex-col md:flex-row space-y-4 md:space-y-0 md:space-x-4">
+                    <div class="flex-1 relative">
+                        <div class="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
+                            <i class="fas fa-search text-gray-400"></i>
+                        </div>
+                        <input type="text" class="block w-full bg-gray-50 border border-gray-200 rounded-md pl-10 pr-3 py-2 focus:outline-none focus:ring-1 focus:ring-primary focus:border-primary" placeholder="Job title, keywords, or company">
+                    </div>
+                    
+                    <div class="flex-1 relative">
+                        <div class="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
+                            <i class="fas fa-map-marker-alt text-gray-400"></i>
+                        </div>
+                        <input type="text" class="block w-full bg-gray-50 border border-gray-200 rounded-md pl-10 pr-3 py-2 focus:outline-none focus:ring-1 focus:ring-primary focus:border-primary" placeholder="Location or Remote">
+                    </div>
+                    
+                    <button class="bg-primary text-white py-2 px-6 rounded-md font-medium hover:bg-primary/90 transition-colors">
+                        Search
+                    </button>
+                </div>
+                
+                <div class="mt-4 flex flex-wrap gap-2">
+                    <button class="bg-gray-100 hover:bg-gray-200 text-gray-800 text-sm py-1 px-3 rounded-full">
+                        Remote <i class="fas fa-times ml-1"></i>
+                    </button>
+                    <button class="bg-gray-100 hover:bg-gray-200 text-gray-800 text-sm py-1 px-3 rounded-full">
+                        Full-time <i class="fas fa-times ml-1"></i>
+                    </button>
+                    <button class="bg-gray-100 hover:bg-gray-200 text-gray-800 text-sm py-1 px-3 rounded-full">
+                        Tech <i class="fas fa-times ml-1"></i>
+                    </button>
+                    <button class="text-primary text-sm hover:underline">
+                        Clear all filters
+                    </button>
+                </div>
+            </div>
+            
+            <!-- Jobs Grid -->
+            <div class="grid grid-cols-1 lg:grid-cols-3 gap-6">
+                <!-- Left: Filters -->
+                <div class="lg:col-span-1">
+                    <div class="bg-white rounded-lg shadow p-6 sticky top-6">
+                        <h2 class="font-bold text-lg mb-4">Filters</h2>
+                        
+                        <div class="space-y-6">
+                            <!-- Job Type -->
+                            <div>
+                                <h3 class="font-medium mb-2">Job Type</h3>
+                                <div class="space-y-2">
+                                    <label class="flex items-center">
+                                        <input type="checkbox" class="rounded text-primary focus:ring-primary" checked>
+                                        <span class="ml-2 text-gray-700">Full-time</span>
+                                    </label>
+                                    <label class="flex items-center">
+                                        <input type="checkbox" class="rounded text-primary focus:ring-primary">
+                                        <span class="ml-2 text-gray-700">Part-time</span>
+                                    </label>
+                                    <label class="flex items-center">
+                                        <input type="checkbox" class="rounded text-primary focus:ring-primary">
+                                        <span class="ml-2 text-gray-700">Contract</span>
+                                    </label>
+                                    <label class="flex items-center">
+                                        <input type="checkbox" class="rounded text-primary focus:ring-primary">
+                                        <span class="ml-2 text-gray-700">Internship</span>
+                                    </label>
+                                </div>
+                            </div>
+                            
+                            <!-- Experience Level -->
+                            <div>
+                                <h3 class="font-medium mb-2">Experience Level</h3>
+                                <div class="space-y-2">
+                                    <label class="flex items-center">
+                                        <input type="checkbox" class="rounded text-primary focus:ring-primary">
+                                        <span class="ml-2 text-gray-700">Entry Level</span>
+                                    </label>
+                                    <label class="flex items-center">
+                                        <input type="checkbox" class="rounded text-primary focus:ring-primary" checked>
+                                        <span class="ml-2 text-gray-700">Mid Level</span>
+                                    </label>
+                                    <label class="flex items-center">
+                                        <input type="checkbox" class="rounded text-primary focus:ring-primary">
+                                        <span class="ml-2 text-gray-700">Senior Level</span>
+                                    </label>
+                                </div>
+                            </div>
+                            
+                            <!-- Salary Range -->
+                            <div>
+                                <h3 class="font-medium mb-2">Salary Range</h3>
+                                <input type="range" min="300000" max="3000000" step="100000" value="1500000" class="w-full h-2 bg-gray-200 rounded-full appearance-none cursor-pointer accent-primary">
+                                <div class="flex justify-between text-xs text-gray-500 mt-1">
+                                    <span>₹3L</span>
+                                    <span>₹15L</span>
+                                    <span>₹30L+</span>
+                                </div>
+                            </div>
+                            
+                            <!-- Location -->
+                            <div>
+                                <h3 class="font-medium mb-2">Location</h3>
+                                <div class="space-y-2">
+                                    <label class="flex items-center">
+                                        <input type="checkbox" class="rounded text-primary focus:ring-primary" checked>
+                                        <span class="ml-2 text-gray-700">Remote</span>
+                                    </label>
+                                    <label class="flex items-center">
+                                        <input type="checkbox" class="rounded text-primary focus:ring-primary">
+                                        <span class="ml-2 text-gray-700">Bangalore</span>
+                                    </label>
+                                    <label class="flex items-center">
+                                        <input type="checkbox" class="rounded text-primary focus:ring-primary">
+                                        <span class="ml-2 text-gray-700">Mumbai</span>
+                                    </label>
+                                    <label class="flex items-center">
+                                        <input type="checkbox" class="rounded text-primary focus:ring-primary">
+                                        <span class="ml-2 text-gray-700">Delhi NCR</span>
+                                    </label>
+                                </div>
+                            </div>
+                            
+                            <button class="w-full bg-primary/10 text-primary py-2 rounded-md font-medium hover:bg-primary/20 transition-colors">
+                                Apply Filters
+                            </button>
+                        </div>
+                    </div>
+                </div>
+                
+                <!-- Right: Job Listings -->
+                <div class="lg:col-span-2 space-y-6">
+                    <!-- Job Card 1 -->
+                    <div class="bg-white rounded-lg shadow p-6 hover:shadow-md transition-shadow border-l-4 border-primary" id="job-1">
+                        <div class="flex flex-col md:flex-row md:justify-between md:items-center">
+                            <div class="flex items-start">
+                                <div class="w-12 h-12 bg-blue-100 rounded-lg flex items-center justify-center text-blue-600 mr-4 font-bold text-xl">G</div>
+                                <div>
+                                    <h2 class="font-bold text-xl">Senior Frontend Engineer</h2>
+                                    <p class="text-gray-600">Google - Bangalore (Remote Available)</p>
+                                    <div class="flex mt-2 flex-wrap gap-2">
+                                        <span class="bg-gray-100 text-gray-800 text-xs px-2 py-1 rounded-full">React</span>
+                                        <span class="bg-gray-100 text-gray-800 text-xs px-2 py-1 rounded-full">TypeScript</span>
+                                        <span class="bg-gray-100 text-gray-800 text-xs px-2 py-1 rounded-full">JavaScript</span>
+                                        <span class="bg-gray-100 text-gray-800 text-xs px-2 py-1 rounded-full">5+ Years</span>
+                                    </div>
+                                </div>
+                            </div>
+                            <div class="mt-4 md:mt-0 flex items-center">
+                                <span class="text-green-600 font-semibold mr-4">₹18L - ₹25L</span>
+                                <button class="text-gray-400 hover:text-primary">
+                                    <i class="far fa-bookmark text-xl"></i>
+                                </button>
+                            </div>
+                        </div>
+                        <p class="mt-4 text-gray-600">Join our dynamic team building the future of Google's web applications. You'll work with cutting-edge technologies and collaborate with talented engineers worldwide.</p>
+                        <div class="mt-4 flex justify-between items-center">
+                            <span class="text-gray-500 text-sm">Posted 2 days ago</span>
+                            <button class="bg-primary text-white py-2 px-4 rounded hover:bg-primary/90 transition-colors job-apply-btn" data-job-id="1">
+                                Apply Now
+                            </button>
+                        </div>
+                    </div>
+                    
+                    <!-- Job Card 2 -->
+                    <div class="bg-white rounded-lg shadow p-6 hover:shadow-md transition-shadow border-l-4 border-primary" id="job-2">
+                        <div class="flex flex-col md:flex-row md:justify-between md:items-center">
+                            <div class="flex items-start">
+                                <div class="w-12 h-12 bg-blue-100 rounded-lg flex items-center justify-center text-blue-600 mr-4 font-bold text-xl">R</div>
+                                <div>
+                                    <h2 class="font-bold text-xl">Full Stack Developer</h2>
+                                    <p class="text-gray-600">Razorpay - Remote</p>
+                                    <div class="flex mt-2 flex-wrap gap-2">
+                                        <span class="bg-gray-100 text-gray-800 text-xs px-2 py-1 rounded-full">Node.js</span>
+                                        <span class="bg-gray-100 text-gray-800 text-xs px-2 py-1 rounded-full">React</span>
+                                        <span class="bg-gray-100 text-gray-800 text-xs px-2 py-1 rounded-full">MongoDB</span>
+                                        <span class="bg-gray-100 text-gray-800 text-xs px-2 py-1 rounded-full">3+ Years</span>
+                                    </div>
+                                </div>
+                            </div>
+                            <div class="mt-4 md:mt-0 flex items-center">
+                                <span class="text-green-600 font-semibold mr-4">₹14L - ₹22L</span>
+                                <button class="text-gray-400 hover:text-primary">
+                                    <i class="far fa-bookmark text-xl"></i>
+                                </button>
+                            </div>
+                        </div>
+                        <p class="mt-4 text-gray-600">Help build the infrastructure powering online payments for millions of businesses. You'll work on complex problems at scale and help shape the future of financial technology.</p>
+                        <div class="mt-4 flex justify-between items-center">
+                            <span class="text-gray-500 text-sm">Posted 1 week ago</span>
+                            <button class="bg-primary text-white py-2 px-4 rounded hover:bg-primary/90 transition-colors job-apply-btn" data-job-id="2">
+                                Apply Now
+                            </button>
+                        </div>
+                    </div>
+                    
+                    <!-- Job Card 3 -->
+                    <div class="bg-white rounded-lg shadow p-6 hover:shadow-md transition-shadow border-l-4 border-secondary" id="job-3">
+                        <div class="flex flex-col md:flex-row md:justify-between md:items-center">
+                            <div class="flex items-start">
+                                <div class="w-12 h-12 bg-green-100 rounded-lg flex items-center justify-center text-green-600 mr-4 font-bold text-xl">S</div>
+                                <div>
+                                    <h2 class="font-bold text-xl">Product Designer</h2>
+                                    <p class="text-gray-600">Swiggy - Mumbai (Hybrid)</p>
+                                    <div class="flex mt-2 flex-wrap gap-2">
+                                        <span class="bg-gray-100 text-gray-800 text-xs px-2 py-1 rounded-full">UI/UX</span>
+                                        <span class="bg-gray-100 text-gray-800 text-xs px-2 py-1 rounded-full">Figma</span>
+                                        <span class="bg-gray-100 text-gray-800 text-xs px-2 py-1 rounded-full">Design Systems</span>
+                                        <span class="bg-gray-100 text-gray-800 text-xs px-2 py-1 rounded-full">4+ Years</span>
+                                    </div>
+                                </div>
+                            </div>
+                            <div class="mt-4 md:mt-0 flex items-center">
+                                <span class="text-green-600 font-semibold mr-4">₹12L - ₹18L</span>
+                                <button class="text-gray-400 hover:text-primary">
+                                    <i class="far fa-bookmark text-xl"></i>
+                                </button>
+                            </div>
+                        </div>
+                        <p class="mt-4 text-gray-600">Join Swiggy's design team to create engaging experiences for millions of food lovers across India. You'll collaborate with engineers and product managers to shape the future of food delivery.</p>
+                        <div class="mt-4 flex justify-between items-center">
+                            <span class="text-gray-500 text-sm">Posted 3 days ago</span>
+                            <button class="bg-primary text-white py-2 px-4 rounded hover:bg-primary/90 transition-colors job-apply-btn" data-job-id="3">
+                                Apply Now
+                            </button>
+                        </div>
+                    </div>
+                    
+                    <!-- Load More -->
+                    <button id="load-more-jobs" class="w-full py-3 border border-gray-300 rounded-lg text-gray-700 font-medium hover:bg-gray-50 transition-colors">
+                        Load More Jobs
+                    </button>
+                </div>
+            </div>
+        </div>
+    </div>
+    
+    <!-- Profile Page -->
+    <div id="profile-page" class="page pt-8 pb-16 px-4 fade-in">
+        <div class="container mx-auto">
+            <!-- Profile Header -->
+            <div class="bg-white rounded-xl shadow-md overflow-hidden mb-6">
+                <div class="bg-gradient-to-r from-blue-500 to-indigo-600 h-32 md:h-48"></div>
+                <div class="px-6 py-4 md:p-6 relative">
+                    <div class="flex flex-col md:flex-row md:items-end">
+                        <div class="absolute top-0 transform -translate-y-1/2 left-6 md:left-10">
+                            <div class="w-24 h-24 md:w-32 md:h-32 bg-white rounded-full border-4 border-white overflow-hidden">
+                                <img src="https://www.jaswanthmadiya.tech/static/media/Madiya_Jaswanth.8af4881a2a9a2ff0f20f.png" alt="Profile" class="w-full h-full object-cover">
+                            </div>
+                        </div>
+                        <div class="mt-12 md:mt-0 md:ml-36">
+                            <h1 class="text-2xl font-bold">Jaswanth Madiya</h1>
+                            <p class="text-gray-600">Senior Full Stack Developer</p>
+                        </div>
+                        <div class="flex mt-4 md:mt-0 md:ml-auto space-x-3">
+                            <button class="bg-primary text-white px-4 py-2 rounded-lg font-medium hover:bg-primary/90 transition-colors" id="edit-profile-btn">
+                                <i class="fas fa-edit mr-2"></i>Edit Profile
+                            </button>
+                            <button class="bg-gray-100 text-gray-700 px-4 py-2 rounded-lg font-medium hover:bg-gray-200 transition-colors">
+                                <i class="fas fa-download mr-2"></i>Download Resume
+                            </button>
+                        </div>
+                    </div>
+                    
+                    <div class="flex justify-center md:justify-start mt-6">
+                        <div class="flex space-x-6 md:space-x-10">
+                            <div class="text-center">
+                                <p class="text-2xl font-bold">12</p>
+                                <p class="text-gray-500 text-sm">Applications</p>
+                            </div>
+                            <div class="text-center">
+                                <p class="text-2xl font-bold">4</p>
+                                <p class="text-gray-500 text-sm">Interviews</p>
+                            </div>
+                            <div class="text-center">
+                                <p class="text-2xl font-bold">86</p>
+                                <p class="text-gray-500 text-sm">Profile Views</p>
+                            </div>
+                            <div class="text-center">
+                                <p class="text-2xl font-bold">75%</p>
+                                <p class="text-gray-500 text-sm">Completion</p>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            
+            <!-- Profile Content -->
+            <div class="grid grid-cols-1 lg:grid-cols-3 gap-6">
+                <!-- Left Column -->
+                <div class="space-y-6">
+                    <!-- About -->
+                    <div class="bg-white rounded-lg shadow p-6">
+                        <div class="flex justify-between items-center mb-4">
+                            <h2 class="text-lg font-bold">About</h2>
+                            <button class="text-primary hover:text-primary/80 section-edit-btn" data-section="about">
+                                <i class="fas fa-pen"></i>
+                            </button>
+                        </div>
+                        <p class="text-gray-600">
+                            Passionate full stack developer with 5+ years of experience building responsive, user-friendly web applications. Specialized in React, Node.js, and modern JavaScript frameworks. Strong focus on performance optimization and accessibility.
+                        </p>
+                    </div>
+                    
+                    <!-- Contact Information -->
+                    <div class="bg-white rounded-lg shadow p-6">
+                        <div class="flex justify-between items-center mb-4">
+                            <h2 class="text-lg font-bold">Contact Information</h2>
+                            <button class="text-primary hover:text-primary/80 section-edit-btn" data-section="contact">
+                                <i class="fas fa-pen"></i>
+                            </button>
+                        </div>
+                        <div class="space-y-3">
+                            <div class="flex items-center">
+                                <i class="fas fa-envelope text-gray-500 w-6"></i>
+                                <span class="ml-2">jmadiya@gitam.in</span>
+                            </div>
+                            <div class="flex items-center">
+                                <i class="fas fa-phone text-gray-500 w-6"></i>
+                                <span class="ml-2">+91 98765 43210</span>
+                            </div>
+                            <div class="flex items-center">
+                                <i class="fas fa-map-marker-alt text-gray-500 w-6"></i>
+                                <span class="ml-2">Hyderabad, Telangana</span>
+                            </div>
+                            <div class="flex items-center">
+                                <i class="fas fa-globe text-gray-500 w-6"></i>
+                                <span class="ml-2">jaswanthmadiya.tech</span>
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <!-- Skills -->
+                    <div class="bg-white rounded-lg shadow p-6">
+                        <div class="flex justify-between items-center mb-4">
+                            <h2 class="text-lg font-bold">Skills</h2>
+                            <button class="text-primary hover:text-primary/80 section-edit-btn" data-section="skills">
+                                <i class="fas fa-pen"></i>
+                            </button>
+                        </div>
+                        <div class="flex flex-wrap gap-2">
+                            <span class="bg-primary/10 text-primary px-3 py-1 rounded-full text-sm">JavaScript</span>
+                            <span class="bg-primary/10 text-primary px-3 py-1 rounded-full text-sm">React</span>
+                            <span class="bg-primary/10 text-primary px-3 py-1 rounded-full text-sm">TypeScript</span>
+                            <span class="bg-primary/10 text-primary px-3 py-1 rounded-full text-sm">HTML/CSS</span>
+                            <span class="bg-primary/10 text-primary px-3 py-1 rounded-full text-sm">Node.js</span>
+                            <span class="bg-primary/10 text-primary px-3 py-1 rounded-full text-sm">GraphQL</span>
+                            <span class="bg-primary/10 text-primary px-3 py-1 rounded-full text-sm">Redux</span>
+                            <span class="bg-primary/10 text-primary px-3 py-1 rounded-full text-sm">Next.js</span>
+                            <span class="bg-primary/10 text-primary px-3 py-1 rounded-full text-sm">Tailwind CSS</span>
+                            <span class="bg-primary/10 text-primary px-3 py-1 rounded-full text-sm">UI/UX Design</span>
+                        </div>
+                    </div>
+                    
+                    <!-- Social Media -->
+                    <div class="bg-white rounded-lg shadow p-6">
+                        <div class="flex justify-between items-center mb-4">
+                            <h2 class="text-lg font-bold">Social Media</h2>
+                            <button class="text-primary hover:text-primary/80 section-edit-btn" data-section="social">
+                                <i class="fas fa-pen"></i>
+                            </button>
+                        </div>
+                        <div class="space-y-3">
+                            <a href="#" class="flex items-center text-gray-600 hover:text-primary">
+                                <i class="fab fa-linkedin text-xl w-8"></i>
+                                <span>linkedin.com/in/jaswanthmadiya</span>
+                            </a>
+                            <a href="#" class="flex items-center text-gray-600 hover:text-primary">
+                                <i class="fab fa-github text-xl w-8"></i>
+                                <span>github.com/jaswanthmadiya</span>
+                            </a>
+                            <a href="#" class="flex items-center text-gray-600 hover:text-primary">
+                                <i class="fab fa-twitter text-xl w-8"></i>
+                                <span>twitter.com/jaswanthmadiya</span>
+                            </a>
+                        </div>
+                    </div>
+                </div>
+                
+                <!-- Right Column (Middle + Right on larger screens) -->
+                <div class="lg:col-span-2 space-y-6">
+                    <!-- Experience -->
+                    <div class="bg-white rounded-lg shadow p-6">
+                        <div class="flex justify-between items-center mb-4">
+                            <h2 class="text-lg font-bold">Experience</h2>
+                            <button class="text-primary hover:text-primary/80 section-edit-btn" data-section="experience">
+                                <i class="fas fa-plus"></i>
+                            </button>
+                        </div>
+                        <div class="space-y-6">
+                            <div class="flex">
+                                <div class="w-12 h-12 bg-blue-100 rounded-lg flex items-center justify-center text-blue-600 mr-4 font-bold text-xl">T</div>
+                                <div>
+                                    <div class="flex justify-between">
+                                        <h3 class="font-bold">Senior Frontend Developer</h3>
+                                        <button class="text-gray-400 hover:text-primary">
+                                            <i class="fas fa-pen"></i>
+                                        </button>
+                                    </div>
+                                    <p class="text-gray-600">TCS</p>
+                                    <p class="text-gray-500 text-sm">January 2020 - Present · 3 years</p>
+                                    <p class="text-gray-600 mt-2">
+                                        Lead frontend development for multiple projects across TCS's client applications. Improved performance by 40% and developed reusable component libraries.
+                                    </p>
+                                    <div class="flex flex-wrap gap-2 mt-2">
+                                        <span class="bg-gray-100 text-gray-700 px-2 py-1 rounded-full text-xs">React</span>
+                                        <span class="bg-gray-100 text-gray-700 px-2 py-1 rounded-full text-xs">TypeScript</span>
+                                        <span class="bg-gray-100 text-gray-700 px-2 py-1 rounded-full text-xs">GraphQL</span>
+                                    </div>
+                                </div>
+                            </div>
+                            
+                            <div class="flex">
+                                <div class="w-12 h-12 bg-blue-100 rounded-lg flex items-center justify-center text-blue-600 mr-4 font-bold text-xl">I</div>
+                                <div>
+                                    <div class="flex justify-between">
+                                        <h3 class="font-bold">Frontend Developer</h3>
+                                        <button class="text-gray-400 hover:text-primary">
+                                            <i class="fas fa-pen"></i>
+                                        </button>
+                                    </div>
+                                    <p class="text-gray-600">Infosys</p>
+                                    <p class="text-gray-500 text-sm">March 2017 - December 2019 · 2 years 10 months</p>
+                                    <p class="text-gray-600 mt-2">
+                                        Built and maintained user-facing features for Infosys's client web platforms. Collaborated with designers and backend engineers to implement new user experiences.
+                                    </p>
+                                    <div class="flex flex-wrap gap-2 mt-2">
+                                        <span class="bg-gray-100 text-gray-700 px-2 py-1 rounded-full text-xs">React</span>
+                                        <span class="bg-gray-100 text-gray-700 px-2 py-1 rounded-full text-xs">JavaScript</span>
+                                        <span class="bg-gray-100 text-gray-700 px-2 py-1 rounded-full text-xs">Redux</span>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <!-- Education -->
+                    <div class="bg-white rounded-lg shadow p-6">
+                        <div class="flex justify-between items-center mb-4">
+                            <h2 class="text-lg font-bold">Education</h2>
+                            <button class="text-primary hover:text-primary/80 section-edit-btn" data-section="education">
+                                <i class="fas fa-plus"></i>
+                            </button>
+                        </div>
+                        <div class="space-y-6">
+                            <div class="flex">
+                                <div class="w-12 h-12 bg-blue-100 rounded-lg flex items-center justify-center text-blue-600 mr-4 font-bold text-xl">G</div>
+                                <div>
+                                    <div class="flex justify-between">
+                                        <h3 class="font-bold">GITAM University</h3>
+                                        <button class="text-gray-400 hover:text-primary">
+                                            <i class="fas fa-pen"></i>
+                                        </button>
+                                    </div>
+                                    <p class="text-gray-600">Master's Degree, Computer Science</p>
+                                    <p class="text-gray-500 text-sm">2015 - 2017</p>
+                                    <p class="text-gray-600 mt-2">
+                                        Specialized in Human-Computer Interaction and Web Technologies
+                                    </p>
+                                </div>
+                            </div>
+                            
+                            <div class="flex">
+                                <div class="w-12 h-12 bg-blue-100 rounded-lg flex items-center justify-center text-blue-600 mr-4 font-bold text-xl">A</div>
+                                <div>
+                                    <div class="flex justify-between">
+                                        <h3 class="font-bold">Andhra University</h3>
+                                        <button class="text-gray-400 hover:text-primary">
+                                            <i class="fas fa-pen"></i>
+                                        </button>
+                                    </div>
+                                    <p class="text-gray-600">Bachelor's Degree, Computer Science</p>
+                                    <p class="text-gray-500 text-sm">2011 - 2015</p>
+                                    <p class="text-gray-600 mt-2">
+                                        GPA: 8.8/10.0, Dean's List all semesters
+                                    </p>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <!-- Projects -->
+                    <div class="bg-white rounded-lg shadow p-6">
+                        <div class="flex justify-between items-center mb-4">
+                            <h2 class="text-lg font-bold">Projects</h2>
+                            <button class="text-primary hover:text-primary/80 section-edit-btn" data-section="projects">
+                                <i class="fas fa-plus"></i>
+                            </button>
+                        </div>
+                        <div class="space-y-6">
+                            <div>
+                                <div class="flex justify-between">
+                                    <h3 class="font-bold">E-commerce Platform</h3>
+                                    <button class="text-gray-400 hover:text-primary">
+                                        <i class="fas fa-pen"></i>
+                                    </button>
+                                </div>
+                                <p class="text-gray-500 text-sm">2021 - 2022</p>
+                                <p class="text-gray-600 mt-2">
+                                    Built a full-featured e-commerce platform with React, Node.js, and MongoDB. Implemented cart functionality, payment processing, and user authentication.
+                                </p>
+                                <div class="flex flex-wrap gap-2 mt-2">
+                                    <span class="bg-gray-100 text-gray-700 px-2 py-1 rounded-full text-xs">React</span>
+                                    <span class="bg-gray-100 text-gray-700 px-2 py-1 rounded-full text-xs">Node.js</span>
+                                    <span class="bg-gray-100 text-gray-700 px-2 py-1 rounded-full text-xs">MongoDB</span>
+                                    <span class="bg-gray-100 text-gray-700 px-2 py-1 rounded-full text-xs">Razorpay</span>
+                                </div>
+                            </div>
+                            
+                            <div>
+                                <div class="flex justify-between">
+                                    <h3 class="font-bold">Task Management App</h3>
+                                    <button class="text-gray-400 hover:text-primary">
+                                        <i class="fas fa-pen"></i>
+                                    </button>
+                                </div>
+                                <p class="text-gray-500 text-sm">2020</p>
+                                <p class="text-gray-600 mt-2">
+                                    Developed a productivity application with real-time updates using React, Firebase, and Tailwind CSS. Features included task organization, reminders, and team collaboration.
+                                </p>
+                                <div class="flex flex-wrap gap-2 mt-2">
+                                    <span class="bg-gray-100 text-gray-700 px-2 py-1 rounded-full text-xs">React</span>
+                                    <span class="bg-gray-100 text-gray-700 px-2 py-1 rounded-full text-xs">Firebase</span>
+                                    <span class="bg-gray-100 text-gray-700 px-2 py-1 rounded-full text-xs">Tailwind CSS</span>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+    
+    <!-- Settings Page -->
+    <div id="settings-page" class="page pt-8 pb-16 px-4 fade-in">
+        <div class="container mx-auto max-w-4xl">
+            <h1 class="text-2xl md:text-3xl font-bold mb-6">Account Settings</h1>
+            
+            <!-- Settings Tabs -->
+            <div class="flex flex-wrap border-b border-gray-200 mb-6">
+                <button class="settings-tab active px-6 py-3 font-medium text-primary border-b-2 border-primary" data-tab="profile">Profile Settings</button>
+                <button class="settings-tab px-6 py-3 font-medium text-gray-500 hover:text-gray-700" data-tab="privacy">Privacy</button>
+                <button class="settings-tab px-6 py-3 font-medium text-gray-500 hover:text-gray-700" data-tab="notifications">Notifications</button>
+                <button class="settings-tab px-6 py-3 font-medium text-gray-500 hover:text-gray-700" data-tab="password">Password & Security</button>
+            </div>
+            
+            <!-- Profile Settings Tab -->
+            <div class="settings-content active" id="profile-settings">
+                <div class="bg-white rounded-lg shadow p-6 mb-6">
+                    <h2 class="text-lg font-bold mb-4">Personal Information</h2>
+                    <form class="space-y-4">
+                        <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+                            <div>
+                                <label for="first-name" class="block text-sm font-medium text-gray-700 mb-1">First Name</label>
+                                <input type="text" id="first-name" class="w-full border border-gray-300 rounded-md px-3 py-2 focus:outline-none focus:ring-1 focus:ring-primary focus:border-primary" value="Jaswanth">
+                            </div>
+                            <div>
+                                <label for="last-name" class="block text-sm font-medium text-gray-700 mb-1">Last Name</label>
+                                <input type="text" id="last-name" class="w-full border border-gray-300 rounded-md px-3 py-2 focus:outline-none focus:ring-1 focus:ring-primary focus:border-primary" value="Madiya">
+                            </div>
+                        </div>
+                        
+                        <div>
+                            <label for="headline" class="block text-sm font-medium text-gray-700 mb-1">Headline</label>
+                            <input type="text" id="headline" class="w-full border border-gray-300 rounded-md px-3 py-2 focus:outline-none focus:ring-1 focus:ring-primary focus:border-primary" value="Senior Full Stack Developer">
+                        </div>
+                        
+                        <div>
+                            <label for="about" class="block text-sm font-medium text-gray-700 mb-1">About</label>
+                            <textarea id="about" rows="4" class="w-full border border-gray-300 rounded-md px-3 py-2 focus:outline-none focus:ring-1 focus:ring-primary focus:border-primary">Passionate full stack developer with 5+ years of experience building responsive, user-friendly web applications. Specialized in React, Node.js, and modern JavaScript frameworks. Strong focus on performance optimization and accessibility.</textarea>
+                        </div>
+                        
+                        <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+                            <div>
+                                <label for="email" class="block text-sm font-medium text-gray-700 mb-1">Email</label>
+                                <input type="email" id="email" class="w-full border border-gray-300 rounded-md px-3 py-2 focus:outline-none focus:ring-1 focus:ring-primary focus:border-primary" value="jmadiya@gitam.in">
+                            </div>
+                            <div>
+                                <label for="phone" class="block text-sm font-medium text-gray-700 mb-1">Phone</label>
+                                <input type="tel" id="phone" class="w-full border border-gray-300 rounded-md px-3 py-2 focus:outline-none focus:ring-1 focus:ring-primary focus:border-primary" value="+91 98765 43210">
+                            </div>
+                        </div>
+                        
+                        <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+                            <div>
+                                <label for="location" class="block text-sm font-medium text-gray-700 mb-1">Location</label>
+                                <input type="text" id="location" class="w-full border border-gray-300 rounded-md px-3 py-2 focus:outline-none focus:ring-1 focus:ring-primary focus:border-primary" value="Hyderabad, Telangana">
+                            </div>
+                            <div>
+                                <label for="website" class="block text-sm font-medium text-gray-700 mb-1">Website</label>
+                                <input type="url" id="website" class="w-full border border-gray-300 rounded-md px-3 py-2 focus:outline-none focus:ring-1 focus:ring-primary focus:border-primary" value="https://jaswanthmadiya.tech">
+                            </div>
+                        </div>
+                        
+                        <div class="flex justify-end">
+                            <button type="submit" class="bg-primary text-white px-4 py-2 rounded-lg font-medium hover:bg-primary/90 transition-colors">
+                                Save Changes
+                            </button>
+                        </div>
+                    </form>
+                </div>
+                
+                <div class="bg-white rounded-lg shadow p-6">
+                    <h2 class="text-lg font-bold mb-4">Profile Picture</h2>
+                    <div class="flex flex-col md:flex-row items-center">
+                        <div class="w-32 h-32 bg-gray-200 rounded-full overflow-hidden mb-4 md:mb-0 md:mr-6">
+                            <img src="https://www.jaswanthmadiya.tech/static/media/Madiya_Jaswanth.8af4881a2a9a2ff0f20f.png" alt="Profile" class="w-full h-full object-cover">
+                        </div>
+                        <div>
+                            <div class="flex space-x-3 mb-2">
+                                <button class="bg-primary text-white px-4 py-2 rounded-lg font-medium hover:bg-primary/90 transition-colors">
+                                    Upload New
+                                </button>
+                                <button class="bg-gray-100 text-gray-700 px-4 py-2 rounded-lg font-medium hover:bg-gray-200 transition-colors">
+                                    Remove
+                                </button>
+                            </div>
+                            <p class="text-sm text-gray-500">
+                                Allowed file types: JPG, PNG. Maximum file size: 5MB.
+                            </p>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            
+            <!-- Privacy Tab (hidden by default) -->
+            <div class="settings-content hidden" id="privacy-settings">
+                <div class="bg-white rounded-lg shadow p-6">
+                    <h2 class="text-lg font-bold mb-4">Privacy Settings</h2>
+                    <div class="space-y-4">
+                        <div class="flex items-center justify-between">
+                            <div>
+                                <h3 class="font-medium">Profile Visibility</h3>
+                                <p class="text-sm text-gray-500">Control who can see your profile</p>
+                            </div>
+                            <select class="border border-gray-300 rounded-md px-3 py-2">
+                                <option>Public</option>
+                                <option>Connections Only</option>
+                                <option>Private</option>
+                            </select>
+                        </div>
+                        
+                        <hr class="border-gray-200">
+                        
+                        <div class="flex items-center justify-between">
+                            <div>
+                                <h3 class="font-medium">Show Email Address</h3>
+                                <p class="text-sm text-gray-500">Allow others to see your email</p>
+                            </div>
+                            <label class="relative inline-flex items-center cursor-pointer">
+                                <input type="checkbox" value="" class="sr-only peer">
+                                <div class="w-11 h-6 bg-gray-200 peer-focus:outline-none peer-focus:ring-4 peer-focus:ring-primary/20 rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-gray-300 after:border after:rounded-full after:h-5 after:w-5 after:transition-all peer-checked:bg-primary"></div>
+                            </label>
+                        </div>
+                        
+                        <div class="flex items-center justify-between">
+                            <div>
+                                <h3 class="font-medium">Show Phone Number</h3>
+                                <p class="text-sm text-gray-500">Allow others to see your phone number</p>
+                            </div>
+                            <label class="relative inline-flex items-center cursor-pointer">
+                                <input type="checkbox" value="" class="sr-only peer" checked>
+                                <div class="w-11 h-6 bg-gray-200 peer-focus:outline-none peer-focus:ring-4 peer-focus:ring-primary/20 rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-gray-300 after:border after:rounded-full after:h-5 after:w-5 after:transition-all peer-checked:bg-primary"></div>
+                            </label>
+                        </div>
+                        
+                        <div class="flex justify-end mt-6">
+                            <button type="submit" class="bg-primary text-white px-4 py-2 rounded-lg font-medium hover:bg-primary/90 transition-colors">
+                                Save Changes
+                            </button>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            
+            <!-- Other tabs content would go here -->
+        </div>
+    </div>
+    
+    <!-- Global JavaScript to handle page functionality -->
+    <script>
+        $(document).ready(function() {
+            // Global variables
+            let currentUser = null;
+            
+            // Simulate user data
+            const users = [
+                {
+                    id: 1,
+                    firstName: 'Jaswanth',
+                    lastName: 'Madiya',
+                    email: 'jmadiya@gitam.in',
+                    password: '12345678',
+                    avatar: 'https://www.jaswanthmadiya.tech/static/media/Madiya_Jaswanth.8af4881a2a9a2ff0f20f.png',
+                    title: 'Senior Full Stack Developer'
+                }
+            ];
+            
+            // Check if user is logged in
+            const checkAuth = () => {
+                const savedUser = localStorage.getItem('currentUser');
+                if (savedUser) {
+                    currentUser = JSON.parse(savedUser);
+                    showLoggedInUI();
+                    navigateTo('dashboard');
+                    return true;
+                }
+                return false;
+            };
+            
+            // Show logged in UI elements
+            const showLoggedInUI = () => {
+                $('#main-header').removeClass('hidden');
+                $('#login-page').removeClass('active').hide(); // Hide login page completely
+                $('#user-name').text(currentUser.firstName + ' ' + currentUser.lastName);
+                $('#dashboard-user-name').text(currentUser.firstName);
+            };
+            
+            // Page navigation
+            const navigateTo = (pageId) => {
+                $('.page').removeClass('active');
+                $(`#${pageId}-page`).addClass('active');
+                $('.nav-link').removeClass('text-primary font-medium');
+                $(`.nav-link[data-page="${pageId}"]`).addClass('text-primary font-medium');
+            };
+            
+            // Initialize activity chart
+            const initActivityChart = () => {
+                const ctx = document.getElementById('activityChart');
+                if (ctx) {
+                    new Chart(ctx, {
+                        type: 'line',
+                        data: {
+                            labels: ['Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat', 'Sun'],
+                            datasets: [{
+                                label: 'Applications',
+                                data: [1, 3, 2, 0, 4, 2, 0],
+                                borderColor: '#4F46E5',
+                                backgroundColor: 'rgba(79, 70, 229, 0.1)',
+                                tension: 0.3,
+                                fill: true
+                            }]
+                        },
+                        options: {
+                            responsive: true,
+                            plugins: {
+                                legend: {
+                                    display: false
+                                }
+                            },
+                            scales: {
+                                y: {
+                                    beginAtZero: true,
+                                    stepSize: 1
+                                }
+                            }
+                        }
+                    });
+                }
+            };
+            
+            // Event Handlers
+            
+            // Authentication tabs
+            $('#login-tab').click(function() {
+                $('#login-form').removeClass('hidden');
+                $('#register-form').addClass('hidden');
+                $('#login-tab').addClass('border-primary text-primary').removeClass('text-gray-500');
+                $('#register-tab').removeClass('border-primary text-primary').addClass('text-gray-500');
+                $('#auth-title').text('Sign in to your account');
+            });
+            
+            $('#register-tab').click(function() {
+                $('#register-form').removeClass('hidden');
+                $('#login-form').addClass('hidden');
+                $('#register-tab').addClass('border-primary text-primary').removeClass('text-gray-500');
+                $('#login-tab').removeClass('border-primary text-primary').addClass('text-gray-500');
+                $('#auth-title').text('Create a new account');
+            });
+            
+            // Login form submission
+            $('#login-form').submit(function(e) {
+                e.preventDefault();
+                
+                // Show loading state
+                $('#login-submit').html('<i class="fas fa-spinner fa-spin"></i>');
+                
+                // Simulate API call with delay
+                setTimeout(() => {
+                    const email = $('#login-email').val();
+                    const password = $('#login-password').val();
+                    
+                    // Find user
+                    const user = users.find(u => u.email === email && u.password === password);
+                    
+                    if (user) {
+                        currentUser = user;
+                        localStorage.setItem('currentUser', JSON.stringify(user));
+                        showLoggedInUI();
+                        navigateTo('dashboard');
+                        initActivityChart();
+                    } else {
+                        alert('Invalid credentials. Hint: Use jmadiya@gitam.in / 12345678');
+                        $('#login-submit').text('Sign in');
+                    }
+                }, 1000);
+            });
+            
+            // Register form submission
+            $('#register-form').submit(function(e) {
+                e.preventDefault();
+                
+                // Show loading state
+                $('#register-submit').html('<i class="fas fa-spinner fa-spin"></i>');
+                
+                // Simulate API call with delay
+                setTimeout(() => {
+                    // Here you would normally validate and send data to server
+                    alert('Registration successful! Please log in.');
+                    
+                    // Switch to login tab
+                    $('#login-tab').click();
+                    $('#register-submit').text('Create Account');
+                }, 1000);
+            });
+            
+            // Navigation
+            $('.nav-link').click(function(e) {
+                e.preventDefault();
+                const pageId = $(this).data('page');
+                navigateTo(pageId);
+                
+                // Close mobile menu if open
+                $('#mobile-nav').slideUp();
+                
+                // Close user dropdown if open
+                $('#user-dropdown').addClass('hidden');
+            });
+            
+            // Mobile menu toggle
+            $('#mobile-menu-btn').click(function() {
+                $('#mobile-nav').slideToggle();
+            });
+            
+            // User dropdown toggle
+            $('#user-menu-btn').click(function() {
+                $('#user-dropdown').toggleClass('hidden');
+            });
+            
+            // Notifications sidebar toggle
+            $('#notifications-btn').click(function() {
+                $('#notifications-sidebar').toggleClass('translate-x-full');
+                $('#overlay').toggleClass('hidden');
+            });
+            
+            $('#close-notifications').click(function() {
+                $('#notifications-sidebar').addClass('translate-x-full');
+                $('#overlay').addClass('hidden');
+            });
+            
+            // Close dropdowns and panels when clicking outside
+            $(document).click(function(e) {
+                if (!$(e.target).closest('#user-menu-container').length) {
+                    $('#user-dropdown').addClass('hidden');
+                }
+                
+                if (!$(e.target).closest('#notifications-sidebar').length && !$(e.target).closest('#notifications-btn').length) {
+                    $('#notifications-sidebar').addClass('translate-x-full');
+                    $('#overlay').addClass('hidden');
+                }
+            });
+            
+            // Settings tabs
+            $('.settings-tab').click(function() {
+                const tab = $(this).data('tab');
+                $('.settings-tab').removeClass('active text-primary border-b-2 border-primary').addClass('text-gray-500');
+                $(this).addClass('active text-primary border-b-2 border-primary').removeClass('text-gray-500');
+                
+                $('.settings-content').addClass('hidden').removeClass('active');
+                $(`#${tab}-settings`).removeClass('hidden').addClass('active');
+            });
+            
+            // Profile edit buttons
+            $('.section-edit-btn').click(function() {
+                const section = $(this).data('section');
+                alert(`Editing ${section} section. This would open an edit form in a real app.`);
+            });
+            
+            // Job application handler
+            $('.job-apply-btn').click(function() {
+                const jobId = $(this).data('job-id');
+                
+                // Show loading state
+                $(this).html('<i class="fas fa-spinner fa-spin"></i>');
+                
+                // Simulate API call with delay
+                setTimeout(() => {
+                    alert(`Application submitted for job #${jobId}!`);
+                    $(this).html('Applied <i class="fas fa-check ml-1"></i>');
+                    $(this).addClass('bg-green-600').removeClass('bg-primary');
+                    $(this).prop('disabled', true);
+                }, 1500);
+            });
+            
+            // Load more jobs
+            $('#load-more-jobs').click(function() {
+                $(this).html('<i class="fas fa-spinner fa-spin"></i> Loading...');
+                
+                // Simulate API call with delay
+                setTimeout(() => {
+                    // Create a new job element
+                    const newJob = `
+                    <div class="bg-white rounded-lg shadow p-6 hover:shadow-md transition-shadow border-l-4 border-secondary opacity-0" style="animation: fadeIn 0.5s ease-in forwards;">
+                        <div class="flex flex-col md:flex-row md:justify-between md:items-center">
+                            <div class="flex items-start">
+                                <div class="w-12 h-12 bg-green-100 rounded-lg flex items-center justify-center text-green-600 mr-4 font-bold text-xl">W</div>
+                                <div>
+                                    <h2 class="font-bold text-xl">DevOps Engineer</h2>
+                                    <p class="text-gray-600">Wipro - Pune</p>
+                                    <div class="flex mt-2 flex-wrap gap-2">
+                                        <span class="bg-gray-100 text-gray-800 text-xs px-2 py-1 rounded-full">Kubernetes</span>
+                                        <span class="bg-gray-100 text-gray-800 text-xs px-2 py-1 rounded-full">Docker</span>
+                                        <span class="bg-gray-100 text-gray-800 text-xs px-2 py-1 rounded-full">AWS</span>
+                                        <span class="bg-gray-100 text-gray-800 text-xs px-2 py-1 rounded-full">3+ Years</span>
+                                    </div>
+                                </div>
+                            </div>
+                            <div class="mt-4 md:mt-0 flex items-center">
+                                <span class="text-green-600 font-semibold mr-4">₹12L - ₹18L</span>
+                                <button class="text-gray-400 hover:text-primary">
+                                    <i class="far fa-bookmark text-xl"></i>
+                                </button>
+                            </div>
+                        </div>
+                        <p class="mt-4 text-gray-600">Join our platform engineering team to build and maintain the infrastructure powering Wipro's global services. Work with cutting-edge cloud technologies and automation tools.</p>
+                        <div class="mt-4 flex justify-between items-center">
+                            <span class="text-gray-500 text-sm">Posted 5 days ago</span>
+                            <button class="bg-primary text-white py-2 px-4 rounded hover:bg-primary/90 transition-colors job-apply-btn" data-job-id="4">
+                                Apply Now
+                            </button>
+                        </div>
+                    </div>
+                    `;
+                    
+                    // Add the new job before the "Load More" button
+                    $(newJob).insertBefore('#load-more-jobs');
+                    
+                    // Update button text
+                    $(this).text('Load More Jobs');
+                    
+                    // Re-attach event handler to new job button
+                    $('.job-apply-btn').off('click').on('click', function() {
+                        const jobId = $(this).data('job-id');
+                        
+                        // Show loading state
+                        $(this).html('<i class="fas fa-spinner fa-spin"></i>');
+                        
+                        // Simulate API call with delay
+                        setTimeout(() => {
+                            alert(`Application submitted for job #${jobId}!`);
+                            $(this).html('Applied <i class="fas fa-check ml-1"></i>');
+                            $(this).addClass('bg-green-600').removeClass('bg-primary');
+                            $(this).prop('disabled', true);
+                        }, 1500);
+                    });
+                }, 1500);
+            });
+            
+            // Logout handler
+            $('#logout-btn').click(function(e) {
+                e.preventDefault();
+                localStorage.removeItem('currentUser');
+                currentUser = null;
+                $('#main-header').addClass('hidden');
+                $('#login-page').addClass('active').show(); // Show login page
+                $('.page').not('#login-page').removeClass('active');
+                $('#login-email').val('');
+                $('#login-password').val('');
+            });
+            
+            // Edit profile button
+            $('#edit-profile-btn').click(function() {
+                navigateTo('settings');
+            });
+            
+            // Initialize the app - check if user is already logged in
+            if (!checkAuth()) {
+                // Pre-fill the login form with demo credentials
+                $('#login-email').val('jmadiya@gitam.in');
+                $('#login-password').val('12345678');
+            } else {
+                // Initialize dashboard charts if we're logged in
+                initActivityChart();
+            }
+        });
+    </script>
+</body>
+</html>
